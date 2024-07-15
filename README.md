@@ -1,6 +1,6 @@
 GitHub Page: [BjarneNiklas.github.io](https://bjarneniklas.github.io/)
 
-Deep Learning ESA 3 - LSTM: https://colab.research.google.com/drive/1jjzowqCGs1bWhuo5KTy7oVNCJ6O4ldGl?usp=sharing
+Deep Learning ESA 3 - LSTM: https://colab.research.google.com/drive/1jjzowqCGs1bWhuo5KTy7oVNCJ6O4ldGl?usp=sharing](https://colab.research.google.com/github/BjarneNiklas/BjarneNiklas.github.io/blob/main/DLESA3.ipynb)
 
 
 
