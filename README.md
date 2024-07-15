@@ -2,9 +2,9 @@ DEEP LEARNING
 
 Github: https://github.com/BjarneNiklas/BjarneNiklas.github.io/tree/main
 
-GitHub Page: [BjarneNiklas.github.io](https://bjarneniklas.github.io/)
+GitHub Page (current Project): https://bjarneniklas.github.io/
 
-ESA 3: Language Model with LSTM: https://colab.research.google.com/drive/1jjzowqCGs1bWhuo5KTy7oVNCJ6O4ldGl?usp=sharing
+ESA 3: Language Model with LSTM: https://bjarnik-dl3-lstm.hf.space
 
 ESA 2: Regression with FFNN: https://bjarnik-regression-ffnn.hf.space
 
