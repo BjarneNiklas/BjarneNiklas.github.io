@@ -1,0 +1,7 @@
+tensorflow
+plotly
+matplotlib
+numpy
+chardet
+PyPDF2
+pandas
