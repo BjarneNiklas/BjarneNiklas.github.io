@@ -17,11 +17,11 @@ def clean_text(text):
     return text
 
 # Dateipfade
-input_path_primary = '\docs\Corpus.txt'
+input_path_primary = 'docs\Corpus.txt'
 input_path_secondary = '/kaggle/input/corpus/Corpus.txt'
-output_path = '\docs\Corpus-cleaned.txt'
-model_path = '\docs\word_prediction_model.keras'  # Keras Format
-tokenizer_path = '\docs\tokenizer.pickle'
+output_path = 'docs\Corpus-cleaned.txt'
+model_path = 'docs\word_prediction_model.keras'  # Keras Format
+tokenizer_path = 'docs\tokenizer.pickle'
 
 # Text bereinigen und speichern, falls die bereinigte Datei nicht existiert
 if os.path.exists(input_path_primary):
