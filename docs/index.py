@@ -73,7 +73,7 @@ else:
     ])
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.fit(X, y, epochs=50, batch_size=32)
+    model.fit(X, y, epochs=1, batch_size=32)
 
     model.save(model_path)  # Im Keras Format speichern
 
