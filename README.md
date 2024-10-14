@@ -1,6 +1,4 @@
-DEEP LEARNING
-
-Github: https://github.com/BjarneNiklas/BjarneNiklas.github.io/tree/main
+DEEP LEARNING & GRAPHICAL VISUALISATION TECHNOLOGIES
 
 GitHub Page (current Project): https://bjarneniklas.github.io/
 
