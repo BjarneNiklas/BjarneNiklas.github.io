@@ -1,6 +1,8 @@
-DEEP LEARNING & GRAPHICAL VISUALISATION TECHNOLOGIES
+GRAPHICAL VISUALISATION TECHNOLOGIES
 
 GitHub Page (current Project): https://bjarneniklas.github.io/
+
+DEEP LEARNING
 
 ESA 3: Language Model with LSTM: https://bjarnik-dl3-lstm.hf.space
 
