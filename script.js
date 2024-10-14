@@ -4,7 +4,7 @@ const imgElement = document.getElementById('rotatingDisc');
 // All PNG names: SW0_0.png, SW1_15.png, ..., SW23_345.png
 for (let i = 0; i < 24; i++) {
   let angle = i * 15; // 0, 15, 30, ..., 345
-  images.push(`BjarneNiklas.github.io/images/SW${i}_${angle}.png`);
+  images.push(`../images/SW${i}_${angle}.png`);
 }
 
 let currentFrame = 0;
