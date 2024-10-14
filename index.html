@@ -1,19 +1,34 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Luttermann - DL3</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EA 1: Interaktive Scheibe - Bjarne Niklas Luttermann</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-	<link rel="stylesheet" href="styles.css">
-	<gradio-app src="https://bjarnik-dl3-lstm.hf.space"></gradio-app>
+  <h1>Interaktive Scheibe</h1>
+  
+  <img id="rotatingDisc" src="images/SW0_0.png" alt="Rotierende Scheibe">
+
+  <h1>Erweiterung: Lade-Animation der Initialen </h2>
+  
+  <div class="sprite-container">
+    <div class="sprite"></div>
+  </div>
+
+  <script src="script.js"></script>
+
+  <footer>
+    <h1>Materialquellen</h1>
+    <p>Die Bilder für die interaktive Scheibe wurden mit Microsoft Bing Image Creator generiert und mithilfe ResizePixel unter https://www.resizepixel.com/ bearbeitet. Prompt: "A round spider web without spider, rainbow Colors"</p>
+    <p>Die verwendeten Bilder für die Lade-Animation wurden selbst erstellt mit Microsoft Paint.</p>
+    <h1>Benutzungshinweise</h1>
+    <p>Scheibe nach links drehen: L (1x drücken für 1 Schritt, halten zum Rotieren)</p>
+    <p>Scheibe nach rechts drehen: R (1x drücken für 1 Schritt, halten zum Rotieren)</p>
+    <p>Scheibe kontinuierlich drehen oder anhalten: A</p>
+    <p>Lade-Animation neustarten: Leertaste</p>
+    <h2>Autor: Bjarne Niklas Luttermann, TH-Lübeck</h2>
+  </footer>
 </body>
 </html>
-
-<script
-	type="module"
-	src="https://gradio.s3-us-west-2.amazonaws.com/4.36.0/gradio.js"
-></script>
-
