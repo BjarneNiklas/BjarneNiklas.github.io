@@ -1,71 +1,127 @@
-const images = [];
-const imgElement = document.getElementById('rotatingDisc');
+const canvas = document.getElementById('glCanvas');
+const gl = canvas.getContext('webgl');
 
-// All PNG names: SW0_0.png, SW1_15.png, ..., SW23_345.png
-for (let i = 0; i < 24; i++) {
-  let angle = i * 15; // 0, 15, 30, ..., 345
-  images.push(`../images/SW${i}_${angle}.png`);
+if (!gl) {
+    alert('WebGL is not supported in your browser.');
 }
 
-let currentFrame = 0;
-
-function rotateDisc() {
-  currentFrame = (currentFrame + 1) % images.length;
-  imgElement.src = images[currentFrame];
-}
-
-let rotationInterval;
-
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'a') {
-    if (rotationInterval) {
-      clearInterval(rotationInterval); // Stop animation
-      rotationInterval = null;
-    } else {
-      rotationInterval = setInterval(rotateDisc, 100); // Start animation
+const vsSource = `
+    attribute vec2 aPosition;
+    void main(void) {
+        gl_Position = vec4(aPosition, 0.0, 1.0);
     }
-  } else if (event.key === 'l') {
-    currentFrame = (currentFrame - 1 + images.length) % images.length;
-    imgElement.src = images[currentFrame];
-  } else if (event.key === 'r') {
-    currentFrame = (currentFrame + 1) % images.length;
-    imgElement.src = images[currentFrame];
-  }
-});
+`;
 
-const spriteElement = document.querySelector('.sprite');
-const spriteWidth = 52;
-let currentSpriteFrame = 0;
-const totalSpriteFrames = 19;
-let spriteAnimationInterval;
-let isAnimating = false;
-
-function animateSprite() {
-  if (currentSpriteFrame < totalSpriteFrames) {
-    const newPosition = `-${currentSpriteFrame * spriteWidth}px 0`; 
-    spriteElement.style.backgroundPosition = newPosition;
-    currentSpriteFrame++;
-  } else {
-    clearInterval(spriteAnimationInterval);
-    isAnimating = false;
-  }
-}
-
-// Start animation
-function startSpriteAnimation() {
-  currentSpriteFrame = 0;
-  isAnimating = true;
-  spriteAnimationInterval = setInterval(animateSprite, 250);
-}
-
-// Start animaton automatically by start
-startSpriteAnimation();
-
-// Restart Animation
-document.addEventListener('keydown', (event) => {
-  if (event.key === ' ') { // Leertaste
-    if (!isAnimating) {
-      startSpriteAnimation();
+const fsSource = `
+    void main(void) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); // Black color
     }
-  }
-});
+`;
+
+function compileShader(gl, sourceCode, type) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, sourceCode);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('Error compiling shader:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+    }
+    return shader;
+}
+
+const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER);
+const fragmentShader = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
+
+const shaderProgram = gl.createProgram();
+gl.attachShader(shaderProgram, vertexShader);
+gl.attachShader(shaderProgram, fragmentShader);
+gl.linkProgram(shaderProgram);
+
+if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+    console.error('Error linking program:', gl.getProgramInfoLog(shaderProgram));
+}
+
+gl.useProgram(shaderProgram);
+
+const vertices = new Float32Array([
+    // Radial lines
+    0.0,  0.0,   // Center
+    0.0,  0.5,   // Top
+    0.0,  0.0,   // Center
+    0.35, 0.35,  // Top-right
+    0.0,  0.0,   // Center
+    0.5,  0.0,   // Right
+    0.0,  0.0,   // Center
+    0.35, -0.35, // Bottom-right
+    0.0,  0.0,   // Center
+    0.0,  -0.5,  // Bottom
+    0.0,  0.0,   // Center
+    -0.35, -0.35,// Bottom-left
+    0.0,  0.0,   // Center
+    -0.5, 0.0,   // Left
+    0.0,  0.0,   // Center
+    -0.35, 0.35, // Top-left
+
+    // Outer circle
+    0.0,  0.5,   // Top
+    0.35, 0.35,  // Top-right
+    0.5,  0.0,   // Right
+    0.35, -0.35, // Bottom-right
+    0.0,  -0.5,  // Bottom
+    -0.35, -0.35,// Bottom-left
+    -0.5, 0.0,   // Left
+    -0.35, 0.35, // Top-left
+
+    // Middle circle
+    0.0,  0.375,   // Top
+    0.262, 0.262,  // Top-right
+    0.375, 0.0,   // Right
+    0.262, -0.262, // Bottom-right
+    0.0,  -0.375,  // Bottom
+    -0.262, -0.262,// Bottom-left
+    -0.375, 0.0,   // Left
+    -0.262, 0.262, // Top-left
+
+    // Inner circle (smaller octagon)
+    0.0,  0.25,  // Top
+    0.18, 0.18,  // Top-right
+    0.25, 0.0,   // Right
+    0.18, -0.18, // Bottom-right
+    0.0,  -0.25, // Bottom
+    -0.18, -0.18,// Bottom-left
+    -0.25, 0.0,  // Left
+    -0.18, 0.18,  // Top-left
+
+    // Inner circle (smallest octagon)
+    0.0,  0.125,  // Top
+    0.09, 0.09,  // Top-right
+    0.125, 0.0,   // Right
+    0.09, -0.09, // Bottom-right
+    0.0,  -0.125, // Bottom
+    -0.09, -0.09,// Bottom-left
+    -0.125, 0.0,  // Left
+    -0.09, 0.09  // Top-left
+]);
+
+const vertexBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+const positionAttributeLocation = gl.getAttribLocation(shaderProgram, 'aPosition');
+gl.enableVertexAttribArray(positionAttributeLocation);
+gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+// Clear canvas and set background color
+gl.clearColor(1.0, 1.0, 1.0, 1.0); // White background
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+// Draw the radial lines
+gl.lineWidth(2.0);
+gl.drawArrays(gl.LINES, 0, 16);
+
+// Draw circles
+gl.drawArrays(gl.LINE_LOOP, 16, 8);
+gl.drawArrays(gl.LINE_LOOP, 24, 8);
+gl.drawArrays(gl.LINE_LOOP, 32, 8);
+gl.drawArrays(gl.LINE_LOOP, 40, 8); 
