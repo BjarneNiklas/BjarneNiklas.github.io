@@ -3,22 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESA 2: Spinnennetz in WebGL</title>
+    <title>EA 4 - Parametrisierte Flächen</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
         canvas {
-            border: 1px solid black;
-            display: block;
-            margin: auto;
+            border: 1px solid #000;
+        }
+        #controls {
+            margin: 20px 0;
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 20px;
             background-color: #f0f0f0;
+            width: 100%;
         }
     </style>
 </head>
-<h1>ESA 2: Spinnennetz aus Linien in WebGL</h1>
 <body>
-    <canvas id="glCanvas" width="800" height="600"></canvas>
-    <script src="script.js"></script>
+    <h1>EA 4 - Parametrisierte Flächen</h1>
+    <canvas id="glCanvas" width="650" height="650"></canvas>
+    <div id="controls">
+        <button id="switchSurface">Nächste Fläche (B)</button>
+        <button id="toggleMode">Show Lines (W)</button>
+    </div>
+    <footer>
+        <h2>Dokumentation</h2>
+        <p>Autor: Bjarne Niklas Luttermann, TH Lübeck</p>
+        <h3>Fläche 1: Möbius Band</h3>
+        <p> 
+            Quelle: <a href="http://www.3d-meier.de/tut3/Seite13.html">3D-Meier.de (Möbius Band)</a>
+        </p>
+        
+        <h3>Fläche 2: Enneper</h3>
+        <p> 
+            Quelle: <a href="http://www.3d-meier.de/tut3/Seite10.html">3D-Meier.de (Enneper´s Surface)</a>
+        </p>
+        
+        <h3>Fläche 3: Lampe</h3>
+        <p>Formel: 
+            (x, y, z) = 
+            ((0.2 + 0.8 * u) * cos(v), 
+            (0.2 + 0.8 * u) * sin(v), 
+            u)
+        </p>
+        <h3>Benutzungshinweise</h3>
+            <strong>B</strong>: Nächste Fläche ansehen
+            <br>
+            <strong>W</strong>: Ein- und ausblenden der Linien
+    </footer>
+
+    <script>
+        const vertexShaderSource = `
+            attribute vec3 aPosition;
+            varying vec3 vColor;
+
+            void main() {
+                gl_Position = vec4(0.5 * aPosition, 1.0); // Skalierung
+                vColor = vec3(aPosition.z * 0.5 + 0.5, 0.5 + 0.5 * sin(aPosition.x), 0.5);
+            }
+        `;
+
+        const fragmentShaderSource = `
+            precision mediump float;
+            varying vec3 vColor;
+
+            void main() {
+                gl_FragColor = vec4(vColor, 1.0);
+            }
+        `;
+
+        function generateSurface(uMin, uMax, vMin, vMax, uSteps, vSteps, paramFunc) {
+            const vertices = [];
+            const indices = [];
+
+            for (let i = 0; i <= uSteps; i++) {
+                for (let j = 0; j <= vSteps; j++) {
+                    const u = uMin + (uMax - uMin) * i / uSteps;
+                    const v = vMin + (vMax - vMin) * j / vSteps;
+                    const [x, y, z] = paramFunc(u, v);
+                    vertices.push(x, y, z);
+                }
+            }
+
+            for (let i = 0; i < uSteps; i++) {
+                for (let j = 0; j < vSteps; j++) {
+                    const idx = i * (vSteps + 1) + j;
+                    indices.push(idx, idx + 1, idx + vSteps + 1);
+                    indices.push(idx + 1, idx + vSteps + 2, idx + vSteps + 1);
+                }
+            }
+
+            return { vertices, indices };
+        }
+
+        function mobiusParam(u, v) {
+            const x = (1 + 0.5 * v * Math.cos(u / 2)) * Math.cos(u);
+            const y = (1 + 0.5 * v * Math.cos(u / 2)) * Math.sin(u);
+            const z = 0.5 * v * Math.sin(u / 2);
+            return [x, y, z];
+        }
+
+        function enneperParam(u, v) {
+            const x = u - Math.pow(u, 3) / 3 + u * Math.pow(v, 2);
+            const y = v - Math.pow(v, 3) / 3 + v * Math.pow(u, 2);
+            const z = Math.pow(u, 2) - Math.pow(v, 2);
+            return [x * 0.3, y * 0.3, z * 0.3];
+        }
+
+        function lampParam(u, v) {
+            const r = 0.2 + u * 0.8;
+            const x = r * Math.cos(v);
+            const y = r * Math.sin(v);
+            const z = u;
+            return [x, y, z];
+        }
+
+        const surfaces = [
+            generateSurface(0, 2 * Math.PI, -1, 1, 50, 50, mobiusParam),
+            generateSurface(-1.5, 1.5, -1.5, 1.5, 50, 50, enneperParam),
+            generateSurface(0, 1, 0, 2 * Math.PI, 50, 50, lampParam)
+        ];
+
+        let currentSurface = 0;
+        let isWireframe = false;
+
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl');
+
+        if (!gl) {
+            console.error('WebGL not supported');
+            alert('WebGL is not supported in your browser!');
+        }
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error('Program linking error:', gl.getProgramInfoLog(program));
+        }
+
+        gl.useProgram(program);
+
+        const positionAttributeLocation = gl.getAttribLocation(program, 'aPosition');
+        const positionBuffer = gl.createBuffer();
+        const indexBuffer = gl.createBuffer();
+
+        function render() {
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            const { vertices, indices } = surfaces[currentSurface];
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+
+            if (isWireframe) {
+                gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
+            } else {
+                gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+            }
+        }
+
+        document.getElementById('switchSurface').addEventListener('click', switchSurface);
+        document.getElementById('toggleMode').addEventListener('click', toggleWireframe);
+
+        function switchSurface() {
+            currentSurface = (currentSurface + 1) % surfaces.length;
+            render();
+        }
+
+        function toggleWireframe() {
+            isWireframe = !isWireframe;
+            render();
+        }
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'b' || event.key === 'B') {
+                switchSurface();
+            } else if (event.key === 'w' || event.key === 'W') {
+                toggleWireframe();
+            }
+        });
+
+        render();
+    </script>
 </body>
-<footer>
-  <h2>Autor: Bjarne Niklas Luttermann, TH Lübeck</h2>
-</footer>
 </html>
