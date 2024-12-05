@@ -2,203 +2,90 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EA 7 - Z-Buffer Visualisierung</title>
+    <title>EA 10 - Seeds Daten in 3D</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #1a1a2e;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: Arial, sans-serif; background-color: #1e1e1e; }
+        canvas { width: 100vw; height: 100vh; display: block; }
 
-        #canvas {
-            width: 100vw;
-            height: 100vh;
-            display: block;
-        }
-
-        #controls {
+        #overlay {
             position: absolute;
             top: 20px;
             left: 20px;
-            background-color: rgba(45, 45, 45, 0.8);
-            color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            max-width: 280px;
-            z-index: 10;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-        }
-
-        #controls h3 {
-            margin: 0 0 10px 0;
+            color: #f5f5f5;
+            background-color: rgba(30, 30, 30, 0.85);
+            padding: 20px;
+            border-radius: 12px;
             font-size: 16px;
-            color: #ffcc00;
+            width: 280px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
         }
-
-        #controls p {
-            margin: 8px 0;
-        }
-
-        #controls .highlight {
-            color: #e70e89;
+        #overlay h2 { 
+            font-size: 24px; 
+            margin-bottom: 12px; 
             font-weight: bold;
+            color: #007acc;
         }
-
-        #controls .author {
-            margin-top: 15px;
+        #overlay p {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+        .control {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #b0bec5;
+        }
+        #author {
             font-size: 12px;
-            color: #bbb;
-            text-align: right;
+            color: #90a4ae;
+            margin-top: 15px;
+            font-style: italic;
+        }
+        #restart-btn {
+            background: #007acc;
+            color: white;
+            padding: 10px 15px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        #restart-btn:hover {
+            background: #005f99;
+        }
+        #step-count {
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: bold;
+            color: #f5f5f5;
         }
     </style>
-</head>
-<body onload="initApp()">
-    <div id="controls">
-        <h3>EA 7 - Z-Buffer Visualisierung</h3>
-        <p><span class="highlight">WASD:</span> Kamera bewegen (auf XY-Ebene)</p>
-        <p><span class="highlight">Pfeiltasten:</span> Szene rotieren</p>
-        <p class="author">Autor: Bjarne Niklas Luttermann (THL)</p>
-    </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB);
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        const zBufferMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                cameraNear: { value: camera.near },
-                cameraFar: { value: camera.far },
-            },
-            vertexShader: `
-                varying float vDepth;
-                void main() {
-                    vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-                    gl_Position = projectionMatrix * modelViewPosition;
-                    vDepth = -modelViewPosition.z;
-                }
-            `,
-            fragmentShader: `
-                varying float vDepth;
-                uniform float cameraNear;
-                uniform float cameraFar;
-                
-                void main() {
-                    float depth = exp(-vDepth * 0.15);
-                    gl_FragColor = vec4(vec3(1.0 - depth), 1.0);
-                }
-            `
-        });
-
-        const houseBase = new THREE.BoxGeometry(2, 2, 2);
-        const house = new THREE.Mesh(houseBase, zBufferMaterial);
-        house.position.set(-2, 0, 0);
-        scene.add(house);
-
-        const roofGeometry = new THREE.ConeGeometry(1.5, 1.5, 4);
-        const roof = new THREE.Mesh(roofGeometry, zBufferMaterial);
-        roof.position.set(-2, 1.75, 0);
-        scene.add(roof);
-
-        const outerSphere = new THREE.Mesh(
-            new THREE.SphereGeometry(1, 32, 32),
-            zBufferMaterial
-        );
-        outerSphere.position.set(2, 0, -2);
-        scene.add(outerSphere);
-
-        const innerSphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 32, 32),
-            zBufferMaterial
-        );
-        innerSphere.position.set(1, 0, -2);
-        scene.add(innerSphere);
-
-        const cylinder = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.5, 0.5, 2, 32),
-            zBufferMaterial
-        );
-        cylinder.position.set(0, 0, 2);
-        scene.add(cylinder);
-
-        const cylinder2 = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.25, 1, 2, 32),
-            zBufferMaterial
-        );
-        cylinder2.position.set(3, -0.5, 1);
-        scene.add(cylinder2);
-
-        const torus = new THREE.Mesh(
-            new THREE.TorusGeometry(1, 0.3, 16, 100),
-            zBufferMaterial
-        );
-        torus.position.set(3, 1.5, 1);
-        scene.add(torus);
-
-        const pyramidGeometry = new THREE.ConeGeometry(1, 1, 4);
-        const pyramid = new THREE.Mesh(pyramidGeometry, zBufferMaterial);
-        pyramid.position.set(-4.5, -0.5, -1);
-        scene.add(pyramid);
-
-        const cube = new THREE.Mesh(
-            new THREE.BoxGeometry(3, 1, 1),
-            zBufferMaterial
-        );
-        cube.position.set(-3, -1, -1);
-        scene.add(cube);
-
-        camera.position.z = 6;
-        camera.position.y = 0;
-
-        const keys = {};
-        const moveSpeed = 0.1;
-        const rotateSpeed = 0.02;
-
-        document.addEventListener('keydown', (event) => {
-            keys[event.key] = true;
-        });
-        document.addEventListener('keyup', (event) => {
-            keys[event.key] = false;
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Camera Movement
-            if (keys['w'] || keys['W']) camera.position.y += moveSpeed;
-            if (keys['s'] || keys['S']) camera.position.y -= moveSpeed;
-            if (keys['a'] || keys['A']) camera.position.x -= moveSpeed;
-            if (keys['d'] || keys['D']) camera.position.x += moveSpeed;
-
-            // Rotation
-            if (keys['ArrowLeft']) scene.rotation.y += rotateSpeed;
-            if (keys['ArrowRight']) scene.rotation.y -= rotateSpeed;
-            if (keys['ArrowUp']) scene.rotation.x += rotateSpeed;
-            if (keys['ArrowDown']) scene.rotation.x -= rotateSpeed;
-
-            renderer.render(scene, camera);
-        }
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        animate();
-    </script>
+    <script src="https://cdn.rawgit.com/karpathy/tsnejs/master/tsne.js"></script>
+</head>
+<body>
+    <div id="overlay">
+        <h2>EA 10 - Seeds Daten</h2>
+        <p class="control"><strong>T:</strong> Nächsten Step berechnen (t-SNE)</p>
+        <p class="control"><strong>WASD:</strong> Kamera bewegen</p>
+        <p class="control"><strong>Pfeiltasten:</strong> Szene rotieren</p>
+        <p class="control"><strong>F5:</strong> Restart</p>
+        <div id="legend">
+            <p><strong>Legende:</strong></p>
+            <p class="control"><span style="color: #ff0000;">■</span> Kama</p>
+            <p class="control"><span style="color: #00ff00;">■</span> Rosa</p>
+            <p class="control"><span style="color: #0000ff;">■</span> Canadian</p>
+            <p class="control"><strong>Perplexity:</strong> 30</p>
+            <p class="control"><strong>Lernrate:</strong> 200</p>
+            <p class="control"><strong>Iterationen:</strong> 1000</p>
+        </div>
+        <p id="author">Autor: Bjarne Niklas Luttermann (THL)</p>
+        <p class="control" id="step-count">Step-Count: 0</p>
+        <button id="restart-btn">Nächsten Step berechnen (T)</button>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
